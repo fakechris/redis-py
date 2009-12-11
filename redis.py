@@ -80,7 +80,7 @@ class Redis(object):
         self.retry_connection = retry_connection
         self._sock = None
         self._fp = None
-        
+        self._auth = None
         
     def _encode(self, s):
         if isinstance(s, str):
@@ -120,6 +120,8 @@ class Redis(object):
             return self._send_command(s)
         except ConnectionError:
             self.disconnect()
+            if self._auth: # reauth if needed
+                self.auth(self._auth)
             return self._send_command(s)
             
             
@@ -1220,6 +1222,7 @@ class Redis(object):
         return info
     
     def auth(self, passwd):
+        self._auth = passwd
         return self.send_command('AUTH %s\r\n' % passwd)
     
     def _get_response(self):
