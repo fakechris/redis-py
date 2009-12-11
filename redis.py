@@ -172,8 +172,31 @@ class Redis(object):
         return self.send_command('%s %s %s\r\n%s\r\n' % (
                 command, name, len(value), value
             ))
+        
+    def smart_set(self, name, value):
+        import types
+        value_type = type(value)
+        if value_type == types.ListType or value_type == types.TupleType:
+            for v in value:
+                self.push(name, v)
+        elif isinstance(value, (set, frozenset)):
+            for v in value:
+                self.sadd(name, v)
+        else:
+            self.set(name, value)
 
     __setitem__ = set
+    
+    def smart_get(self, name):
+        key_type = self.get_type(name)
+        if (key_type == 'string'):
+            return self.get(name)
+        elif (key_type == 'list'):
+            return self.lrange(name, 0, -1)
+        elif (key_type == 'set'):
+            return self.smembers(name)
+        else:
+            return None
     
     def get(self, name):
         """
