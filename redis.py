@@ -179,9 +179,11 @@ class Redis(object):
         import types
         value_type = type(value)
         if value_type == types.ListType or value_type == types.TupleType:
+            self.delete(name)
             for v in value:
                 self.push(name, v)
         elif isinstance(value, (set, frozenset)):
+            self.delete(name)
             for v in value:
                 self.sadd(name, v)
         else:
